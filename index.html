@@ -246,11 +246,14 @@ function spinNumbers(){
     nums.forEach(n=>n.classList.add("spin"));
 
 timer = setInterval(() => {
-    nums.forEach(n => n.textContent =
-        src[Math.floor(Math.random() * src.length)]
-    );
-}, 100); // 🔥 chậm hơn (từ 60 → 100)
+    let pool = [...getNumbers()]; // copy danh sách số
 
+    nums.forEach(n => {
+        const i = Math.floor(Math.random() * pool.length);
+        n.textContent = pool[i];
+        pool.splice(i, 1); // ❗ xóa số đã dùng
+    });
+}, 80);
 setTimeout(() => {
     clearInterval(timer);
     nums.forEach(n => n.classList.remove("spin"));
@@ -259,7 +262,6 @@ setTimeout(() => {
 }, 6000); // 🔥 quay lâu hơn (2s → 3.5s)
 
 }
-
 function spinPrizes(){
     const boxes=document.querySelectorAll(".prize");
     let pool=[...prizeSource];
