@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Lucky Money 2026</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    min-height:100vh;
+    background:url("background.png") no-repeat center bottom/86%;
+    font-family:'Montserrat',sans-serif;
+    text-align:center;
+    color:#2b2f7f;
+    overflow:hidden;
+}
+
+/* ===== LAYOUT ===== */
+.content{
+    min-height:100vh;
+    padding-top:60px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:36px;
+}
+
+h1{font-size:56px;font-weight:800}
+
+/* ===== BUTTON ===== */
+.btn{
+    padding:16px 42px;
+    font-size:22px;
+    border-radius:16px;
+    border:none;
+    background:linear-gradient(135deg,#2b2f7f,#3b3f9f);
+    color:#fff;
+    cursor:pointer;
+}
+
+/* ===== BOX ===== */
+.numbers,.prizes{
+    display:flex;
+    gap:28px;
+    justify-content:center;
+    flex-wrap:wrap;
+}
+
+.box{
+    width:170px;
+    height:170px;
+    border-radius:30px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    box-shadow:0 0 35px rgba(43,47,127,.75);
+}
+
+/* NUMBER */
+.num{
+    background:linear-gradient(145deg,#2b2f7f,#3b3f9f);
+    color:white;
+    font-size:72px;
+}
+
+/* PRIZE */
+.prize{
+    font-size:26px;
+    text-align:center;
+    padding:16px;
+    background:#f1f1f1;
+    color:#444;
+}
+
+/* PRIZE COLORS */
+.prize.ba{
+    background:#ffd32a;
+    color:#5a3b00;
+    box-shadow:0 0 40px gold;
+}
+.prize.khuyen{
+    background:#e6efff;
+    color:#2b2f7f;
+}
+.prize.mayman{
+    background:#f3f3f3;
+}
+
+/* SPIN */
+.spin{animation:shake .1s infinite}
+@keyframes shake{50%{transform:translateY(-6px)}}
+
+/* ===== ADMIN PANEL ===== */
+.admin-panel{
+    position:fixed;
+    bottom:20px;
+    left:20px;
+    width:280px;
+    padding:16px;
+    background:white;
+    border-radius:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+    display:none;
+    z-index:999;
+    text-align:left;
+}
+.admin-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.close-btn{cursor:pointer;font-size:20px;font-weight:bold}
+.close-btn:hover{color:red}
+.admin-panel textarea{
+    width:100%;
+    border-radius:10px;
+    padding:10px;
+    font-family:inherit;
+}
+
+/* SECRET ZONE */
+#secretZone{
+    position:fixed;
+    bottom:20px;
+    left:20px;
+    width:60px;
+    height:60px;
+    cursor:pointer;
+    z-index:998;
+}
+
+/* ===== FLOWER ===== */
+.flower{
+    position:fixed;
+    top:-40px;
+    font-size:26px;
+    animation:fall linear forwards;
+    pointer-events:none;
+}
+@keyframes fall{
+    to{
+        transform:translateY(110vh) rotate(360deg);
+        opacity:0;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="content">
+    <h1>🧧 LUCKY MONEY 2026 🧧</h1>
+    <button class="btn" onclick="spin()">QUAY</button>
+
+    <div class="numbers">
+        <div class="box num">?</div><div class="box num">?</div><div class="box num">?</div>
+        <div class="box num">?</div><div class="box num">?</div><div class="box num">?</div>
+        <div class="box num">?</div>
+    </div>
+
+    <div class="prizes" id="prizes" style="display:none">
+        <div class="box prize"></div><div class="box prize"></div><div class="box prize"></div>
+        <div class="box prize"></div><div class="box prize"></div><div class="box prize"></div>
+        <div class="box prize"></div>
+    </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminPanel" class="admin-panel">
+    <div class="admin-header">
+        <b>ADMIN PANEL</b>
+        <span class="close-btn" onclick="closeAdmin()">✕</span>
+    </div>
+    <textarea id="numberList" rows="4"
+    placeholder="1,5,8,12,20,33,66"></textarea>
+</div>
+
+<div id="secretZone" onclick="toggleAdmin()"></div>
+
+<!-- SOUND -->
+<audio id="spinSound" src="spin.mp3"></audio>
+
+<script>
+/* ===== AUTO FULLSCREEN ===== */
+window.addEventListener("click",()=>{
+    if(!document.fullscreenElement){
+        document.documentElement.requestFullscreen().catch(()=>{});
+    }
+},{once:true});
+
+/* ===== FLOWER FALL ===== */
+setInterval(()=>{
+    const f=document.createElement("div");
+    f.className="flower";
+    f.textContent="🌸";
+    f.style.left=Math.random()*100+"vw";
+    f.style.animationDuration=4+Math.random()*4+"s";
+    document.body.appendChild(f);
+    setTimeout(()=>f.remove(),8000);
+},400);
+
+/* ===== DATA ===== */
+const ADMIN_PASS="123456";
+const prizeSource=[
+ "Giải Khuyến Khích","Giải Khuyến Khích","Giải Khuyến Khích",
+ "Giải Ba","Giải Ba",
+ "Chúc Bạn May Mắn","Chúc Bạn May Mắn"
+];
+let step=1,timer;
+
+/* LOAD ADMIN */
+const saved=localStorage.getItem("lucky_numbers");
+if(saved) document.getElementById("numberList").value=saved;
+
+function toggleAdmin(){
+    const pass=prompt("Nhập mật khẩu admin:");
+    if(pass!==ADMIN_PASS){alert("Sai mật khẩu");return;}
+    document.getElementById("adminPanel").style.display="block";
+}
+function closeAdmin(){
+    document.getElementById("adminPanel").style.display="none";
+    localStorage.setItem("lucky_numbers",numberList.value);
+}
+
+function getNumbers(){
+    const arr=numberList.value.split(/[\s,]+/)
+    .map(n=>parseInt(n)).filter(n=>!isNaN(n));
+    return arr.length>=7?arr:[1,5,8,12,20,33,66];
+}
+
+function spin(){
+    document.getElementById("spinSound").currentTime=0;
+    document.getElementById("spinSound").play();
+    step===1?spinNumbers():spinPrizes();
+}
+
+function spinNumbers(){
+    const nums=document.querySelectorAll(".num");
+    const src=getNumbers();
+    document.getElementById("prizes").style.display="none";
+    nums.forEach(n=>n.classList.add("spin"));
+
+timer = setInterval(() => {
+    nums.forEach(n => n.textContent =
+        src[Math.floor(Math.random() * src.length)]
+    );
+}, 100); // 🔥 chậm hơn (từ 60 → 100)
+
+setTimeout(() => {
+    clearInterval(timer);
+    nums.forEach(n => n.classList.remove("spin"));
+    document.getElementById("prizes").style.display = "flex";
+    step = 2;
+}, 6000); // 🔥 quay lâu hơn (2s → 3.5s)
+
+}
+
+function spinPrizes(){
+    const boxes=document.querySelectorAll(".prize");
+    let pool=[...prizeSource];
+
+    boxes.forEach(b=>{
+        b.className="box prize spin";
+        b.textContent="";
+    });
+
+    setTimeout(()=>{
+        boxes.forEach(b=>{
+            const p=pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+            b.classList.remove("spin");
+            b.textContent=p;
+            if(p==="Giải Ba") b.classList.add("ba");
+            else if(p==="Giải Khuyến Khích") b.classList.add("khuyen");
+            else b.classList.add("mayman");
+        });
+        step=1;
+    },6000);
+}
+</script>
+
+</body>
+</html>
